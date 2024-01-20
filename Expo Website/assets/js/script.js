@@ -15,7 +15,7 @@ function modalShow(cardIndex) {
     blurElement.style.filter = "blur(10px)";
     modal.style.display = "block";
 
-    const jsonDataArray = "./assets/json/aboutStudent.json";
+    const jsonDataArray = "./Expo Website/assets/json/aboutStudent.json";
     fetch(jsonDataArray)
         .then(response => response.json())
         .then(jsonDataArray => {
