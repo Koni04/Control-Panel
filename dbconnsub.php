@@ -1,8 +1,8 @@
 <?php
 $servername = "localhost";
-$username = "root";
-$password = "";
-$datebaseName = "subsystemdb";
+$username = "id21799717_subsystemdb";
+$password = "TheEncounter04&";
+$datebaseName = "id21799717_subsystemdb";
 
 $connect = mysqli_connect($servername, $username, $password, $datebaseName);
 
