@@ -1,392 +1,124 @@
+<?php
+include "./dbconn.php";
+session_start();
+
+$error = "";
+
+if (isset($_POST["login"])) {
+    $username = mysqli_real_escape_string($connect, $_POST["username"]);
+    $password = mysqli_real_escape_string($connect, $_POST["password"]);
+
+    $adminCheck = mysqli_query($connect, "SELECT COUNT(*) as count FROM `admin`");
+
+    if ($adminCheck === false) {
+        $error = "Error checking admin database: " . mysqli_error($connect);
+    } else {
+        $adminRow = mysqli_fetch_assoc($adminCheck);
+        $adminCount = $adminRow['count'];
+
+        if ($adminCount == 0) {
+            $error = "Admin database is empty. Please contact the administrator.";
+        } else {
+            $sql_users = "SELECT * FROM `employees` WHERE BINARY username = ? AND BINARY password = ?";
+            $stmt_users = mysqli_prepare($connect, $sql_users);
+            mysqli_stmt_bind_param($stmt_users, "ss", $username, $password);
+            mysqli_stmt_execute($stmt_users);
+            $result_users = mysqli_stmt_get_result($stmt_users);
+
+            $sql_admin = "SELECT * FROM `admin` WHERE BINARY username = ? AND BINARY password = ?";
+            $stmt_admin = mysqli_prepare($connect, $sql_admin);
+            mysqli_stmt_bind_param($stmt_admin, "ss", $username, $password);
+            mysqli_stmt_execute($stmt_admin);
+            $result_admin = mysqli_stmt_get_result($stmt_admin);
+
+            if ($result_users && mysqli_num_rows($result_users) > 0) {
+                $user = mysqli_fetch_assoc($result_users);
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['name'] = $user['name'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['role'] = $user['role'];
+
+                header("location: ./dashboardEmployees.php");
+                exit();
+                
+            } elseif ($result_admin && mysqli_num_rows($result_admin) > 0) {
+                $admin = mysqli_fetch_assoc($result_admin);
+                $_SESSION['user_id'] = $admin['id'];
+                $_SESSION['name'] = $admin['name'];
+                $_SESSION['adminImage'] = $admin['adminImage'];
+                $_SESSION['username'] = $admin['username'];
+                $_SESSION['role'] = $admin['role'];
+            } else {
+                $error = "Invalid username or password";
+            }
+
+            mysqli_stmt_close($stmt_users);
+            mysqli_stmt_close($stmt_admin);
+        }
+    }
+
+    if (empty($error)) {
+        header("location: ./controlpanel.php");
+        exit();
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <meta name="Author" content="Information Technology, Culinary Arts">
-        <meta name="Description" content="IT and Culinary collaboration">
-        <meta name="Keywords" content="HTML, CSS, JS, JSON">
-        <meta charset="UTF-8">
-        <!-- Favicon-->
-        <link rel="icon" type="image/x-icon" href="./Expo Website/assets/img/favicon.ico" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- Css -->
-        <link rel="stylesheet" href="./Expo Website/assets/css/home-style.css">
-        <!-- Modal Css -->
-        <link rel="stylesheet" href="./Expo Website/assets/css/modal-style.css">
-        <!-- Css for Mobile -->
-        <link rel="stylesheet" href="./Expo Website/assets/css/mobileHome-style.css">
-        <!-- Bootstrap -->
-        <link rel="stylesheet" href="./Expo Website/assets/css/bootstrap.css">
-        <title>Inventa101 | Landing page</title>
+        <link rel="stylesheet" href="./css/dashboard.css">
+        <!-- Awesome Fonts -->
+        <script src="https://kit.fontawesome.com/20fbad04b0.js" crossorigin="anonymous"></script>
+        <style>
+            .error-message {
+                background-color: #f8d7da;
+                border: 1px solid #f5c6cb;
+                color: #721c24;
+                padding: 10px;
+                margin-top: 10px;
+                border-radius: 5px;
+            }
+        </style>
+        <title>| Login</title>
     </head>
     <body>
-        <div id="blur-container">
-            <header>
-                <nav>
-                    <li><a href="#logo-icon" id="logo-name"><span>I</span>nventa<sup>101</sup></a></li>
-                    <button class="menu-button" id="toggle-menu" onclick="openNav()">&#9776;</button>
-                    <div id="mySidenav" class="sidenav">
-                        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-                        <ul id="nav-ul">
-                            <li><a href="#home" id="mainHome">Home</a></li>
-                            <li><a href="#aboutUs">About us</a></li>
-                            <li><a href="#service">Services</a></li>
-                            <li><a href="#faq">FAQ</a></li>
-                            <li><a href="#contact">Contact</a></li>
-                        </ul>
-                    </div>
-                </nav>
-            </header>
-            <main> 
-                <!-- Home Page -->
-                <section class="fade-in show-once" id="home">
-                <a href="#home" title="home-link"></a>
-                    <h1 id="typer">Your Partner in Small Business Growth</h1>
-                    <p>
-                        Discover the power of A Inventa, the driving force behind small business success. At A Inventa, we're passionate about empowering entrepreneurs to achieve their full potential.
-                    </p>       
-                    <div style="margin-top: 10px;" class="center-container">
-                        <a href="./login.php" target="_blank">
-                            <button class="click-btn">Get's Started</button>
-                        </a>
-                    </div>
-                </section>
-                <!-- About Us -->   
-                <section class="fade-in show-once" id="aboutUs">
-                <a href="#aboutUs" title="aboutUs-link"></a>
-                    <h1>About Us</h1>
-                    <div>
-                        <h6 style="margin: 50px; text-align: center; line-height: 25px;">
-                            We are a dedicated team of G12 students from STI College Marikina, driven by a passion for technology and a shared vision to empower culinary businesses. With our combined skills in programming, data management, and creative problem-solving, we have embarked on a journey to create a Point of Sales Management System that will make a significant impact in the culinary industry. Our mission is to provide culinary establishments with a user-friendly and efficient tool that not only simplifies their daily operations but also helps them make informed decisions based on real-time sales and inventory data. We are committed to delivering a system that can optimize processes, reduce waste, and ultimately contribute to the success of our clients in the culinary world. As we work on this project for our expo program, we are excited about the opportunity to apply our knowledge, gain real-world experience, and make a positive difference in the culinary sector. We look forward to sharing our progress and the final product with the community and industry partners. Thank you for your support and interest in our endeavor."
-                        </h6>
-                    </div>
-                    <div class="aboutUs-container">
-                        <h2 style="text-align: center; padding-bottom: 50px; padding-top: 50px;" >Meet our team</h2>
-                        <div class="aboutUs-main-card-container">
-                            <swiper-container class="mySwiper" pagination="true" grab-cursor="true" slides-per-view="auto" pagination-dynamic-bullets="true" navigation="true">
-                                <swiper-slide>
-                                    <div onclick="modalShow(0)" class="main-card">
-                                        <img src="./Expo Website/assets/img/Members/ronnel.jpg" alt="Mercado, Ronnel C.">
-                                        <h6>Mercado Ronnel</h6>  
+        <div class="container mt-5">
+            <div class="row d-flex justify-content-center align-items-center">
+                <div class="col-md-6">
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <form id="login-form" action="" method="post">
+                                <h1 class="card-title display-4 text-center">We are <span class="text-info">INVENTA</span></h1>
+                                <h4 class="card-subtitle mb-4 text-center">Welcome back! Log in to your account to view today's clients:</h4>
+                                <?php if (!empty($error)) { ?>
+                                    <div class="alert alert-danger">
+                                        <?php echo $error; ?>
                                     </div>
-                                </swiper-slide>
-                                <swiper-slide>
-                                    <div onclick="modalShow(1)" class="main-card">
-                                        <img src="./Expo Website/assets/img/Members/fernando.jpg" alt="Villanueva, Fernando Jr T.">
-                                        <h6>Villanueva Fernando Jr</h6>  
+                                <?php } ?>
+                                <div class="form-group">
+                                    <label for="username">Username</label>
+                                    <input placeholder="" type="text" name="username" id="username" class="form-control" autocomplete="off">
+                                </div>
+                                <div class="form-group">
+                                    <label for="password">Password</label>
+                                    <div class="input-group">
+                                        <input placeholder="" type="password" name="password" id="password" class="form-control" autocomplete="off">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text toggle-password"><i class="far fa-eye"></i></span>
+                                        </div>
                                     </div>
-                                </swiper-slide>
-                                <swiper-slide>
-                                    <div onclick="modalShow(2)" class="main-card">
-                                        <img src="./Expo Website/assets/img/Members/vincent.jpg" alt="Dimaculangan, Mark Vincent">
-                                        <h6>Dimaculangan Mark Vincent</h6>
-                                    </div>
-                                </swiper-slide>
-                                <swiper-slide>
-                                    <div onclick="modalShow(3)" class="main-card">
-                                        <img src="./Expo Website/assets/img/Members/Jozh.jpg" alt="Jimenez, Jozh Ryle Fernando">
-                                        <h6>Jimenez Jozh Ryle</h6>
-                                    </div>
-                                </swiper-slide>
-                                <swiper-slide>
-                                    <div onclick="modalShow(4)" class="main-card">
-                                        <img src="./Expo Website/assets/img/Members/james.jpg" alt="Gestoso, James Andrei E.">
-                                        <h6>Gestoso James Andrei</h6>
-                                    </div>
-                                </swiper-slide>
-                                <swiper-slide>
-                                    <div onclick="modalShow(5)" class="main-card">
-                                        <img src="./Expo Website/assets/img/Members/miguel.jpg" alt="Muñoz, Ludolfo Ma. Miguel L.">
-                                        <h6>Muñoz Miguel</h6>
-                                    </div>
-                                </swiper-slide>
-                                <swiper-slide>
-                                    <div onclick="modalShow(6)" class="main-card">
-                                        <img src="./Expo Website/assets/img/Members/argie.jpg" alt="Delgado, Argie P.">
-                                        <h6>Delgado Argie</h6>
-                                    </div>
-                                </swiper-slide>
-                                <swiper-slide>
-                                    <div onclick="modalShow(7)" class="main-card">
-                                        <img src="./Expo Website/assets/img/Members/ryan.jpg" alt="Consigna, Ryan L.">
-                                        <h6>Consigna Ryan</h6>
-                                    </div>
-                                </swiper-slide>
-                                <swiper-slide>
-                                    <div onclick="modalShow(8)" class="main-card">
-                                        <img src="./Expo Website/assets/img/Members/fegalan.jpg" alt="Fegalan, Christopher T.">
-                                        <h6>Fegalan Christopher</h6>
-                                    </div>
-                                </swiper-slide>
-                                <swiper-slide>
-                                    <div onclick="modalShow(9)" class="main-card">
-                                        <img src="./Expo Website/assets/img/Members/macasilhig.jpg" alt="Macasilhig, Khyle Myrvin P.">
-                                        <h6>Macasilhig Khyle Myrvin</h6>
-                                    </div>
-                                </swiper-slide>
-                                <swiper-slide>
-                                    <div onclick="modalShow(10)" class="main-card">
-                                        <img src="./Expo Website/assets/img/Members/jude.jpg" alt="Seguin, Jude Cedric M.">
-                                        <h6>Seguin Jude Cedric</h6>
-                                    </div>
-                                </swiper-slide>
-                            </swiper-container>
+                                </div>
+                                <input type="submit" value="Login" name="login" class="btn btn-primary btn-block">
+                                <hr>
+                                <div class="switch">Don't have an account? <a href="./register.php">Register here</a></div>
+                            </form>
                         </div>
-                    </div>
-                </section>
-                <!-- Service -->
-                <section class="fade-in show-once" id="service">
-                <a href="#service" title="service-link"></a>
-                    <h1>Services</h1>
-                    <div class="service-container">
-                        <div class="service-card-container">
-                            <div class="service-card">
-                                <h4>Front-end Coding</h4>
-                                <img src="./Expo Website/assets/img/gif/Frontend.gif" alt="front-end logo" loading="lazy" />
-                                <p>
-                                    We are a capable and efficient team of front-end developers with expertise in 
-                                    HTML, CSS, and JavaScript. Our collective experience extends to various front-end frameworks, 
-                                    libraries, and tools, allowing us to deliver high-quality web solutions.
-                                </p>
-                            </div>
-                            <div class="service-card">
-                                <h4>Performance Optimization</h4>
-                                <img src="./Expo Website/assets/img/gif/Optimization.gif" alt="Optimization">
-                                <p>
-                                    We possess in-depth knowledge and expertise in optimizing 
-                                    front-end code and assets to enhance website loading times 
-                                    and provide an exceptional user experience.
-                                </p>
-                            </div>
-                            <div class="service-card">
-                                <h4>Responsive Web Design</h4>
-                                <img src="./Expo Website/assets/img/gif/Responsiveness.gif" alt="responsive logo" loading="lazy"/>
-                                <p>
-                                    As a team, we excel in developing responsive web applications 
-                                    that adapt seamlessly to various screen sizes and devices, 
-                                    ensuring a consistent and user-friendly experience across the board.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                <section class="fade-in show-once" id="faq">
-                    <a href="#faq" title="faq-link"></a>
-                    <div class="faq-container">
-                        <h1>Frequently Asked Question (FAQ)</h1>
-                        <p>Discover answers to commonly asked questions about POS system.</p>
-    
-                        <div class="selection-card-container">
-                            <div class="selection-faq">
-                                <button class="accordion">What is a Point of Sales (POS) System?</button>
-                                <div class="panel">
-                                    <p>
-                                        A Point of Sale (POS) system is a comprehensive technological solution that plays a pivotal role in facilitating transactions between customers and businesses. Operating as the central hub in retail and hospitality settings, a typical POS system comprises essential hardware components, including a terminal or computer, barcode scanner, receipt printer, cash drawer, and payment terminal. The accompanying software is equipped with features such as inventory management, sales reporting, employee management, and customer relationship management (CRM).
-                                    </p>
-                                </div>
-        
-                                <button class="accordion">What are the key features of a POS system?</button>
-                                <div class="panel">
-                                    <p>
-                                        A Point of Sale (POS) system encompasses a range of key features essential for efficient and streamlined retail and hospitality operations. Firstly, transaction processing lies at the core, enabling customers to select items, calculate totals, and complete purchases through various payment methods. The hardware components, including terminals, barcode scanners, receipt printers, cash drawers, and payment terminals, work seamlessly together to facilitate these transactions. The software component offers robust inventory management, tracking product quantities, and providing real-time alerts for restocking.
-                                    </p>
-                                </div>
-        
-                                <button class="accordion">How can a POS System benefit my business?</button>
-                                <div class="panel">
-                                    <p>
-                                        Implementing a Point of Sale (POS) system can yield significant benefits for your business. Firstly, a POS system streamlines the transaction process, enhancing efficiency at the point of purchase. This not only reduces the time customers spend at the checkout but also improves overall customer satisfaction. The system's inventory management capabilities are crucial for maintaining optimal stock levels, preventing stockouts, and minimizing excess inventory. Real-time tracking of sales data and the generation of detailed reports empower business owners to make informed decisions, identify top-performing products, and optimize pricing strategies.
-                                    </p>
-                                </div>
-        
-                                <button class="accordion">Is a POS System customizable to fit our specific business needs?</button>
-                                <div class="panel">
-                                    <p> 
-                                        It is possible to tailor a Point of Sale (POS) system to exactly match your companies demands. No matter what business you work in retail, hospitality, or something else entirely a well-thought-out POS system may be adjusted to meet your particular needs. Options for customization include tailoring the system to operate with particular goods or services, integrating it with other business tools like accounting software or e-commerce platforms, and customizing the user interface to fit your workflow.
-                                    </p>
-                                </div>
-        
-                                <button class="accordion">How secure is the POS System?</button>
-                                <div class="panel">
-                                    <p>
-                                        Businesses must give top priority to a Point of Sale (POS) system's security in order to protect sensitive customer information and preserve transaction integrity. POS systems need strong security mechanisms to stave off such attacks. By limiting access to the system to only authorized workers, user authentication lowers the possibility of unauthorized use. In order to protect sensitive data, like credit card numbers, during transactions, sophisticated encryption techniques are used, creating a safe environment for financial transactions.
-                                    </p>
-                                </div>
-        
-                                <button class="accordion">What is the pricing structure of the POS System?</button>
-                                <div class="panel">
-                                    <p>
-                                        The cost of a Point of Sale (POS) system can vary based on several factors, including the functionality offered, the size of the business, and the sector. Point of sale (POS) systems may incur upfront costs for hardware and software like as terminals, barcode scanners, and payment processors. Subscription services or software licensing fees are typical prices vary according to the features and support offered. Certain vendors provide tiers of pricing, which enables companies to select plans that suit their particular requirements and financial limitations. 
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="selection-faq">
-                                <button class="accordion">Is training required for my team to use the POS System?</button>
-                                <div class="panel">
-                                    <p>
-                                        Training is usually essential for your team to use a Point of Sale (POS) system properly. While modern POS systems are user-friendly, with intuitive interfaces and touchscreens, knowledge with the system's functions is critical for optimum operation. Processing transactions, maintaining inventory, navigating the user interface, and leveraging additional capabilities like as sales reporting or client management can all be covered in training.
-                                    </p>
-                                </div>
-        
-                                <button class="accordion">What kind of support is provided with the POS System?</button>
-                                <div class="panel">
-                                    <p>
-                                        POS system vendors often give complete assistance to assist businesses in making the most of their systems. This assistance may take the shape of customer care helplines, online chat support, or email assistance. Many vendors offer substantial documentation, tutorials, and user guides to aid with self-help and troubleshooting of common difficulties. Some companies provide on-site training sessions for employees to ensure they are comfortable using the system.
-                                    </p>
-                                </div>
-        
-                                <button class="accordion">How can I measure the ROI (Return on Investment) of implementing a Sales Management System?</button>
-                                <div class="panel">
-                                    <p>
-                                        Measuring the Return on Investment (ROI) of implementing a Sales Management System involves assessing the impact of the system on various aspects of your business. Initially, you can quantify the direct costs associated with the implementation, including software licensing, hardware, training, and any ongoing maintenance fees. Next, evaluate the system's impact on efficiency by measuring time savings in sales processes, order fulfillment, and inventory management.
-                                    </p>
-                                </div>
-        
-                                <button class="accordion">Is the POS System cloud-based or on-premise?</button>
-                                <div class="panel">
-                                    <p>
-                                        A POS system's deployment model might vary, with possibilities for both cloud-based and on-premise solutions. Cloud-based POS systems run on remote servers and allow businesses to connect to the system via the internet. Scalability, automatic updates, and the ability to manage several locations from a single site are all advantages of this paradigm. It also relieves enterprises of the need to invest in and manage their own server infrastructure. On premise POS systems, on the other hand, are installed and run on local servers within the business premises.
-                                    </p>
-                                </div>
-        
-                                <button class="accordion">Can the POS System help with sales forecasting?</button>
-                                <div class="panel">
-                                    <p>
-                                        A Point of Sale (POS) system can significantly contribute to sales forecasting by providing valuable data and insights. Through the continuous tracking of sales transactions, inventory levels, and customer purchasing patterns, the POS system generates a wealth of information that can be analyzed to make accurate sales predictions. The system can identify top-selling products, track seasonal trends, and highlight customer preferences. With this data, businesses can anticipate demand, optimize inventory levels, and plan promotions or marketing campaigns strategically.
-                                    </p>
-                                </div>
-        
-                                <button class="accordion">Does the POS System support mobile access?</button>
-                                <div class="panel">
-                                    <p>
-                                        Many modern Point of Sale (POS) systems offer support for mobile access, providing businesses with increased flexibility and convenience. Mobile POS solutions allow users to access the system from smartphones or tablets, enabling sales transactions, inventory management, and other key functionalities on the go. This capability is particularly advantageous for businesses with mobile sales teams, pop-up shops, or those seeking to enhance customer interactions on the sales floor.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                <!-- Contact -->
-                <section class="fade-in show-once" id="contact">
-                    <a href="#contact" title="contact-link"></a>
-                    <h1>Contact Us</h1>
-                    <div class="session">
-                        <div class="left">
-                            <div class="contact-message">
-                                <h4 style="border-bottom: #0056b3 2px solid; display: inline;">We are Inventa<sup>101</sup></h4>
-                                <p style="padding-top: 15px;">
-                                    We're here to assist you! If you have any questions or need assistance, please feel free to reach out to us. Our dedicated team is ready to provide prompt and helpful support to ensure that your concerns are addressed effectively. Your satisfaction is our priority.
-                                    <br><br>
-                                </p>
-                                <p>
-                                    We use gmail.com to protect your email address from spam.
-                                </p>
-                            </div>
-                        </div>
-                        <div class="right">
-                            <div id="form">
-                                <h4 style="border-bottom: #0056b3 2px solid; display: inline;">Get In Touch</h4>
-                                <form id ="contact-form" style="margin-top: 15px">
-                                    <label>Name:</label> <br>
-                                    <input type="text" id="fullName" required> <br>
-            
-                                    <label>Email:</label> <br>
-                                    <input type="text" id="email_id" required> <br>
-            
-                                    <label>Comment:</label> <br>
-                                    <textarea id="message" rows="4" required></textarea> <br>
-            
-                                    <input onclick="SendMail()" type="button" value="Send Message ✉">
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </main>
-    
-            <div onclick="backToTop()">
-                <a aria-label="Back to Top" class="back-to-Top" id="top">
-                    <img src="./Expo Website/assets/img/arrow.svg" alt="Arrow Up" />
-                </a>
-            </div>
-    
-            <footer class="footer">
-                <div class="container row">
-                    <div class="footer-col">
-                        <h1><span style="color: #0056b3;">I</span>nventa <sup>101</sup></h1>
-                        <h6 style="font-size: 1rem; font-weight: 300">
-                            The <link>Inventa</link> Web Application for <link>JM2DG Culinary Solutions</link> will efficiently handle customer transactions while also storing valuable customer purchase history.
-                        </h6>
-                    </div>
-                    <div class="footer-col">
-                        <h4>Programming Tools</h4>
-                        <ul>
-                            <li><a href="#"><i class="fa-brands fa-html5"></i> HTML</a></li>
-                            <li><a href="#"><i class="fa-brands fa-css3-alt"></i> CSS</a></li>
-                            <li><a href="#"><i class="fa-brands fa-square-js"></i> JAVASCRIPT</a></li>
-                            <li><a href="#"><i class="fa-brands fa-php"></i> PHP</a></li>
-                            <li><a href="#"><i class="fa-regular fa-file-code"></i> JSON</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-col">
-                        <h4>Contact Us</h4>
-                        <ul>
-                            <li><a href="#"><i class="fa-solid fa-location-dot"></i> STI Collage Marikina City</a></li>
-                            <li><a href="#"><i class="fa-solid fa-envelope"></i> expocollaboration@gmail.com</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-col">
-                        <h4>follow us</h4>
-                        <div class="social-links">
-                            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
-                            <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
-                            <a href="#"><i class="fa-brands fa-instagram"></i></a>
-                            <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
-                        </div>
-                    </div>
-                </div>
-                <hr>
-                <p>Created by 2023 <script>document.write("- "+(new Date).getFullYear());</script>, Villanueva & Co</p>
-            </footer>
-        </div>
-        <!-- Modal View -->
-        <div style="display: none;" id="modal" class="modal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="aboutUs-containers">
-                        <h3 style="text-align: center; padding-top: 20px;" class="modal-strand"></h3>
-                        <div class="modal-aboutUs-imgcontainer">
-                            <div class="modal-aboutUs-cards">
-                                <img src="" alt="Image" class="modal-image">
-                            </div>
-                        </div>
-                        <h6 style="text-align: center;" class="modal-id"></h6>
-                        <h6 style="text-align: center; padding-bottom: 25px;" class="modal-role"></h6>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- FontAwesome Kit -->
-        <script src="https://kit.fontawesome.com/3b161c540c.js" crossorigin="anonymous"></script>          
-        <!-- Javascript -->
-        <script type="text/javascript" src="./Expo Website/assets/js/script.js"></script>
-        <!-- Sweet Alert -->
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <!-- SwiperJS -->
-        <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-element-bundle.min.js"></script>
-        <!-- Import Scroller Revealer Library-->
-        <script src="https://unpkg.com/scrollreveal"></script>
-        <script type="text/javascript" src="./Expo Website/assets/js/scrollreveal.js"></script>
-        <!-- EmailJS -->
-        <script type="text/javascript" src="./Expo Website/assets/js/sendMail.js"></script>
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-        <script type="text/javascript">
-            (function(){
-                emailjs.init("JsXPaZimgE6cIOmMS");
-            })();
-        </script>
+        <!-- JS -->
+        <script type="text/javascript" src="./js/eyefunction.js"></script>
     </body>
 </html>
