@@ -1,8 +1,8 @@
 <?php
 $servername = "localhost";
-$username = "id21799717_controlpanel";
-$password = "TheEncounter04&";
-$datebaseName = "id21799717_controlpaneldb";
+$username = "root";
+$password = "";
+$datebaseName = "controlpaneldb";
 
 $connect = mysqli_connect($servername, $username, $password, $datebaseName);
 
