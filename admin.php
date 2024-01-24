@@ -52,18 +52,22 @@ if (isset($_POST["submit"])) {
 
             move_uploaded_file($tmpName, 'uploads/' . $newImageName);
 
-            // Database Insertion
-            $sql = "INSERT INTO `admin`(`id`, `name`, `adminImage`, `adminEmail`, `username`,  `password`, `role`) 
-            VALUES (NULL,'$fullname','$newImageName', '$email', '$username','$password','$role')";
-
-            $result = mysqli_query($connect, $sql);
-
-            if ($result) {
-                echo "Successfully created an account";
-                header("Location: ./index.php");
-                exit();
+            if($_SESSION["role"] !== "admin") {
+                echo "You don't have a permission to add";
             } else {
-                echo "Failed to add an administrator to the admin table";
+                // Database Insertion
+                $sql = "INSERT INTO `admin`(`id`, `name`, `adminImage`, `adminEmail`, `username`,  `password`, `role`) 
+                VALUES (NULL,'$fullname','$newImageName', '$email', '$username','$password','$role')";
+
+                $result = mysqli_query($connect, $sql);
+
+                if ($result) {
+                    echo "Successfully created an account";
+                    header("Location: ./index.php");
+                    exit();
+                } else {
+                    echo "Failed to add an administrator to the admin table";
+                }
             }
         }
     }

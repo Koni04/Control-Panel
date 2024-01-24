@@ -65,12 +65,5 @@
 
                 <!-- Divider -->
                 <hr class="sidebar-divider my-0">
-
-                <li class="nav-item">
-                    <a class="nav-link" href="defineGroupPermission.php">
-                        <i class="fas fa-fw fa-shield"></i>
-                        <span>Group Permission</span>
-                    </a>
-                </li>
             </ul>
             <!-- End of Sidebar -->
