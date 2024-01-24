@@ -53,7 +53,7 @@ if (isset($_POST["submit"])) {
             move_uploaded_file($tmpName, 'uploads/' . $newImageName);
 
             if($_SESSION["role"] !== "admin") {
-                echo "You don't have a permission to add";
+                echo "<script>alert('User does not have the permission to access this module!');</script>";
             } else {
                 // Database Insertion
                 $sql = "INSERT INTO `admin`(`id`, `name`, `adminImage`, `adminEmail`, `username`,  `password`, `role`) 
